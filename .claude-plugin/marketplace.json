@@ -1,0 +1,16 @@
+{
+  "name": "claude-code-plugin-enhancement",
+  "owner": {
+    "name": "light"
+  },
+  "metadata": {
+    "description": "Claude Code 增强插件集: todo 队列 / 任务约束 / 自动推进"
+  },
+  "plugins": [
+    {
+      "name": "todo-queue",
+      "source": "./plugins/todo-queue",
+      "description": "持久化 todo 队列: 自动归集会话/代码中的 TODO, 约束当前目标任务不跑偏, 支持队列自动推进"
+    }
+  ]
+}
