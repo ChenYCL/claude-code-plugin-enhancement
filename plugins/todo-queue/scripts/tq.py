@@ -1118,6 +1118,12 @@ def hook_session_start(data):
 
 def hook_user_prompt(data):
     state = load_state()
+    # 被动模式 + 无进行中任务: 不注入任何东西, 尽早返回
+    if passive(state) and not state.get("focus"):
+        if state.get("auto_continues"):
+            state["auto_continues"] = 0
+            save_state(state)
+        return 0
     if state["auto_continues"]:
         state["auto_continues"] = 0
         save_state(state)
@@ -1219,11 +1225,17 @@ def hook_post_tool(data):
 
 
 def hook_stop(data):
-    state = load_state()
-    cfg = state["config"]
-    mode = auto_mode(state)
-    if mode == "off":
+    # 被动模式从不拦截, 连读文件都省了
+    try:
+        with open(queue_path(), encoding="utf-8") as f:
+            raw = json.load(f)
+    except (OSError, json.JSONDecodeError):
         return 0
+    cfg = raw.get("config") or {}
+    if not cfg.get("intervene") or cfg.get("auto", "off") in (False, "off"):
+        return 0
+    state = load_state()
+    mode = auto_mode(state)
     if state["auto_continues"] >= cfg.get("max_auto", 10):
         print("todo-queue: 本轮自动推进已达 max_auto={} 次, 放行停止。"
               "队列仍有未完成任务, 可手动 /todo-queue:next 继续。".format(cfg.get("max_auto", 10)),
@@ -1273,7 +1285,9 @@ def cmd_hook(args):
         print("未知 hook 事件: {}".format(args.event), file=sys.stderr)
         return 1
     try:
-        record_session(data, args.event)
+        # 只在 SessionStart 写会话指针; 每轮 UserPromptSubmit 再写一次纯属浪费 (~磁盘 IO)
+        if args.event == "session-start":
+            record_session(data, args.event)
         return handler(data)
     except Exception as e:  # hook 失败不应阻塞 Claude Code 主流程
         print("todo-queue hook 错误: {}".format(e), file=sys.stderr)

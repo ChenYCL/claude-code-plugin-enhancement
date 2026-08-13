@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/tq.py\" hook session-start",
+            "command": "python3 -S \"${CLAUDE_PLUGIN_ROOT}/scripts/tq.py\" hook session-start",
             "timeout": 10
           }
         ]
@@ -16,8 +16,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/tq.py\" hook user-prompt",
-            "timeout": 10
+            "command": "q=\"${CLAUDE_PROJECT_DIR}/.claude/todo-queue.json\"; [ -f \"$q\" ] && grep -qE '\"status\": \"(queued|active|paused)\"' \"$q\" && python3 -S \"${CLAUDE_PLUGIN_ROOT}/scripts/tq.py\" hook user-prompt || true",
+            "timeout": 5
           }
         ]
       }
@@ -28,8 +28,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/tq.py\" hook post-tool",
-            "timeout": 10
+            "command": "q=\"${CLAUDE_PROJECT_DIR}/.claude/todo-queue.json\"; [ -f \"$q\" ] && grep -q '\"intervene\": true' \"$q\" && python3 -S \"${CLAUDE_PLUGIN_ROOT}/scripts/tq.py\" hook post-tool || true",
+            "timeout": 5
           }
         ]
       }
@@ -39,8 +39,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/tq.py\" hook stop",
-            "timeout": 10
+            "command": "q=\"${CLAUDE_PROJECT_DIR}/.claude/todo-queue.json\"; [ -f \"$q\" ] && grep -q '\"intervene\": true' \"$q\" && python3 -S \"${CLAUDE_PLUGIN_ROOT}/scripts/tq.py\" hook stop || true",
+            "timeout": 5
           }
         ]
       }
