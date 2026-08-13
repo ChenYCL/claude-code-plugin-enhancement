@@ -286,12 +286,14 @@ def trim_archive(cap_kb, dry_run=False):
             return True
         with open(p, encoding="utf-8") as f:
             lines = f.readlines()
-        keep, size = [], 0
+        # Bug fix: 反向遍历从最新行累加, 累计未超限才保留; 原逻辑 break 导致只保留超限前的极少行
+        keep, size, target = [], 0, cap_kb * 1024 * 0.8
         for line in reversed(lines):
-            size += len(line.encode("utf-8"))
-            if size > cap_kb * 1024 * 0.8:
-                break
+            sz = len(line.encode("utf-8"))
+            if size + sz > target:
+                continue          # 从最旧端丢弃直到总量降到 80%
             keep.append(line)
+            size += sz
         fd, tmp = tempfile.mkstemp(dir=os.path.dirname(p), prefix=".tq-arc-")
         with os.fdopen(fd, "w", encoding="utf-8") as f:
             f.writelines(reversed(keep))
@@ -1119,7 +1121,7 @@ def hook_session_start(data):
 def hook_user_prompt(data):
     state = load_state()
     # 被动模式 + 无进行中任务: 不注入任何东西, 尽早返回
-    if passive(state) and not state.get("focus"):
+    if passive(state) and not focus_task(state):  # Bug fix: 用 focus_task() 而非 state.get("focus"), 后者在任务已关闭时仍返回旧 ID
         if state.get("auto_continues"):
             state["auto_continues"] = 0
             save_state(state)

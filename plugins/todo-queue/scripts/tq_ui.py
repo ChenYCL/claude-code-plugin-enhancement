@@ -326,7 +326,7 @@ def run_tui():
                 tq.save_state(state)
             elif ch == ord("d") and cur:
                 tq.close_task(state, cur, "done", note="UI 面板标记完成")
-                if state["config"]["auto"]:
+                if tq.auto_mode(state) != "off":   # Bug fix: auto 是字符串, 不能 bool()
                     q2 = tq.queued(state)
                     if q2:
                         tq.activate(state, q2[0])
@@ -356,8 +356,14 @@ def run_tui():
                 cur["priority"] = min(5, cur.get("priority", 3) + 1)
                 tq.save_state(state)
             elif ch == ord("a"):
-                state["config"]["auto"] = not state["config"]["auto"]
+                # 读原始配置值, 不用 auto_mode() — 被动模式下 auto_mode 强制返回 "off", 循环会卡住
+                cur_mode = state["config"].get("auto", "off")
+                if cur_mode not in ("off", "on", "smart"):
+                    cur_mode = "off"
+                nxt = {"off": "smart", "smart": "on", "on": "off"}[cur_mode]
+                state["config"]["auto"] = nxt
                 tq.save_state(state)
+                msg = "auto → {}".format(tq.AUTO_LABEL[nxt])
 
     curses.wrapper(_main)
 

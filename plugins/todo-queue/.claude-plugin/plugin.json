@@ -1,6 +1,6 @@
 {
   "name": "todo-queue",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "持久化 todo 队列: 被动显示不干涉对话, 支持归集/暂停恢复/多选 fork 到新 session/OpenCode 风格 TUI 面板",
   "author": {
     "name": "light"
